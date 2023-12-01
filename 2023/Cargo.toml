@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+
+members = ["aoclib", "day??", "template"]
+
+[workspace.dependencies]
+thiserror = "1.0.50"
+
