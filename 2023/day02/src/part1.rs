@@ -3,16 +3,16 @@ use std::str::FromStr;
 use aoclib::AocError;
 
 #[derive(Debug)]
-struct Game {
+pub struct Game {
     id: i32,
-    sets: Vec<Set>,
+    pub sets: Vec<Set>,
 }
 
 #[derive(Debug)]
-struct Set {
-    red: i32,
-    blue: i32,
-    green: i32,
+pub struct Set {
+    pub red: i32,
+    pub blue: i32,
+    pub green: i32,
 }
 
 impl FromStr for Game {
