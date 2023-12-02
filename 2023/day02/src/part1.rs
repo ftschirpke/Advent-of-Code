@@ -19,20 +19,27 @@ impl FromStr for Game {
     type Err = AocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts = s.split(':').collect::<Vec<_>>();
-        if let [game_id, sets] = parts[..] {
-            let id = game_id[5..].parse::<i32>()?;
-            let set_strs = sets.split(';').collect::<Vec<_>>();
-            let mut sets = Vec::with_capacity(sets.len());
+        if !s.starts_with("Game") {
+            return Err(AocError::ParseError(format!(
+                "invalid game: line does not start with 'Game': {:?}",
+                s
+            )));
+        }
+        let colon_idx = s.find(':').ok_or_else(|| {
+            AocError::ParseError(format!("invalid game: no colon found in line {:?}", s))
+        })?;
+        let id = s[5..colon_idx].parse::<i32>()?;
+        let set_strs = s[colon_idx + 1..].split(';').collect::<Vec<_>>();
+        let sets = {
+            let mut sets = Vec::with_capacity(set_strs.len());
             set_strs.iter().try_for_each(|set_str| {
                 let parsed_set = set_str.parse::<Set>()?;
                 sets.push(parsed_set);
                 Ok::<(), AocError>(())
             })?;
-            Ok(Game { id, sets })
-        } else {
-            Err(AocError::ParseError(format!("invalid game: {:?}", parts)))
-        }
+            sets
+        };
+        Ok(Game { id, sets })
     }
 }
 
