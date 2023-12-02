@@ -15,6 +15,4 @@ if [ -d $name ]; then
 fi
 
 cp -r template $name
-sed -i "s/template/$name/" $name/Cargo.toml
-sed -i "s/template/$name/" $name/src/bin/part1.rs
-sed -i "s/template/$name/" $name/src/bin/part2.rs
+sed -i "s/template/$name/" $name/Cargo.toml $name/src/bin/part1.rs $name/src/bin/part2.rs
