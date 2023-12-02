@@ -9,6 +9,11 @@ name=$1
 
 cd $(dirname $0)
 
+if [ -d $name ]; then
+    echo "Error: $name already exists"
+    exit 1
+fi
+
 cp -r template $name
 sed -i "s/template/$name/" $name/Cargo.toml
 sed -i "s/template/$name/" $name/src/bin/part1.rs

@@ -1,4 +1,6 @@
 use std::io;
+use std::num::ParseIntError;
+use std::string::ParseError;
 
 use thiserror::Error;
 
@@ -14,4 +16,16 @@ pub enum AocError {
     IoError(#[from] io::Error),
     #[error("Unknown error")]
     UnknownError,
+}
+
+impl From<ParseError> for AocError {
+    fn from(e: ParseError) -> Self {
+        AocError::ParseError(format!("{}", e))
+    }
+}
+
+impl From<ParseIntError> for AocError {
+    fn from(e: ParseIntError) -> Self {
+        AocError::ParseError(format!("(Integer) {}", e))
+    }
 }

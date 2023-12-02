@@ -1,5 +1,95 @@
+use std::str::FromStr;
+
 use aoclib::AocError;
 
+#[derive(Debug)]
+struct Game {
+    id: i32,
+    sets: Vec<Set>,
+}
+
+#[derive(Debug)]
+struct Set {
+    red: i32,
+    blue: i32,
+    green: i32,
+}
+
+impl FromStr for Game {
+    type Err = AocError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts = s.split(':').collect::<Vec<_>>();
+        if let [game_id, sets] = parts[..] {
+            let id = game_id[5..].parse::<i32>()?;
+            let set_strs = sets.split(';').collect::<Vec<_>>();
+            let mut sets = Vec::with_capacity(sets.len());
+            set_strs.iter().try_for_each(|set_str| {
+                let parsed_set = set_str.parse::<Set>()?;
+                sets.push(parsed_set);
+                Ok::<(), AocError>(())
+            })?;
+            Ok(Game { id, sets })
+        } else {
+            Err(AocError::ParseError(format!("invalid game: {:?}", parts)))
+        }
+    }
+}
+
+impl FromStr for Set {
+    type Err = AocError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts = s.split(", ").collect::<Vec<_>>();
+        let parts = {
+            let mut parts = parts
+                .iter()
+                .map(|part| part.split_whitespace().collect::<Vec<_>>())
+                .collect::<Vec<_>>();
+            parts.sort_by_key(|part| part[1]);
+            parts
+        };
+        let red = &parts.iter().find(|part| part[1] == "red");
+        let red = if let Some(red) = red {
+            red[0].parse::<i32>()?
+        } else {
+            0
+        };
+        let green = &parts.iter().find(|part| part[1] == "green");
+        let green = if let Some(green) = green {
+            green[0].parse::<i32>()?
+        } else {
+            0
+        };
+        let blue = &parts.iter().find(|part| part[1] == "blue");
+        let blue = if let Some(blue) = blue {
+            blue[0].parse::<i32>()?
+        } else {
+            0
+        };
+        Ok(Set { red, green, blue })
+    }
+}
+
+pub fn game_id_if_possible(line: &str) -> Result<Option<i32>, AocError> {
+    let game = line.parse::<Game>()?;
+    let possible = game
+        .sets
+        .iter()
+        .all(|set| set.red <= 12 && set.green <= 13 && set.blue <= 14);
+    if possible {
+        Ok(Some(game.id))
+    } else {
+        Ok(None)
+    }
+}
+
 pub fn process(input: &'static str) -> Result<i32, AocError> {
-    todo!("Part 1");
+    input.lines().try_fold(0i32, |count, line| {
+        if let Some(id) = game_id_if_possible(line)? {
+            Ok(count + id)
+        } else {
+            Ok(count)
+        }
+    })
 }
