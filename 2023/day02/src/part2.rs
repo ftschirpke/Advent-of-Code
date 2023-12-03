@@ -5,22 +5,8 @@ use aoclib::AocError;
 use crate::part1::{Game, Set};
 
 impl Set {
-    pub fn new() -> Self {
-        Self {
-            red: 0,
-            blue: 0,
-            green: 0,
-        }
-    }
-
     pub fn power(&self) -> i32 {
         self.red * self.blue * self.green
-    }
-}
-
-impl Default for Set {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

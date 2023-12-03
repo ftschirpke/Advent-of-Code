@@ -1,6 +1,10 @@
 use std::str::FromStr;
 
 use aoclib::AocError;
+use nom::{
+    branch::alt, bytes::complete::tag, character::complete::i32 as i32number, combinator::value,
+    multi::separated_list1, sequence::delimited, sequence::separated_pair, IResult,
+};
 
 #[derive(Debug)]
 pub struct Game {
@@ -15,66 +19,73 @@ pub struct Set {
     pub green: i32,
 }
 
+impl Set {
+    pub fn new() -> Self {
+        Self {
+            red: 0,
+            blue: 0,
+            green: 0,
+        }
+    }
+}
+
+impl Default for Set {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone)]
+enum Color {
+    Red,
+    Blue,
+    Green,
+}
+
+fn game_parser(input: &str) -> IResult<&str, Game> {
+    let (input, id) = delimited(tag("Game "), i32number, tag(": "))(input)?;
+    let (input, sets) = separated_list1(tag("; "), set_parser)(input)?;
+    let game = Game { id, sets };
+    Ok((input, game))
+}
+
+fn set_parser(input: &str) -> IResult<&str, Set> {
+    let (input, color_pairs) = separated_list1(tag(", "), color_pair_parser)(input)?;
+    let mut set = Set::new();
+    for (val, color) in color_pairs.iter() {
+        match color {
+            Color::Red => set.red += val,
+            Color::Blue => set.blue += val,
+            Color::Green => set.green += val,
+        }
+    }
+    Ok((input, set))
+}
+
+fn color_pair_parser(input: &str) -> IResult<&str, (i32, Color)> {
+    separated_pair(i32number, tag(" "), color_parser)(input)
+}
+
+fn color_parser(input: &str) -> IResult<&str, Color> {
+    let red = value(Color::Red, tag("red"));
+    let blue = value(Color::Blue, tag("blue"));
+    let green = value(Color::Green, tag("green"));
+    alt((red, blue, green))(input)
+}
+
 impl FromStr for Game {
     type Err = AocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if !s.starts_with("Game") {
-            return Err(AocError::ParseError(format!(
-                "invalid game: line does not start with 'Game': {:?}",
-                s
-            )));
+        let (rest, game) = game_parser(s)?;
+        if rest.is_empty() {
+            Ok(game)
+        } else {
+            Err(AocError::ParseError(format!(
+                "Game parser did not consume all input: {}",
+                rest
+            )))
         }
-        let colon_idx = s.find(':').ok_or_else(|| {
-            AocError::ParseError(format!("invalid game: no colon found in line {:?}", s))
-        })?;
-        let id = s[5..colon_idx].parse::<i32>()?;
-        let set_strs = s[colon_idx + 1..].split(';').collect::<Vec<_>>();
-        let sets = {
-            let mut sets = Vec::with_capacity(set_strs.len());
-            set_strs.iter().try_for_each(|set_str| {
-                let parsed_set = set_str.parse::<Set>()?;
-                sets.push(parsed_set);
-                Ok::<(), AocError>(())
-            })?;
-            sets
-        };
-        Ok(Game { id, sets })
-    }
-}
-
-impl FromStr for Set {
-    type Err = AocError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts = s.split(", ").collect::<Vec<_>>();
-        let parts = {
-            let mut parts = parts
-                .iter()
-                .map(|part| part.split_whitespace().collect::<Vec<_>>())
-                .collect::<Vec<_>>();
-            parts.sort_by_key(|part| part[1]);
-            parts
-        };
-        let red = &parts.iter().find(|part| part[1] == "red");
-        let red = if let Some(red) = red {
-            red[0].parse::<i32>()?
-        } else {
-            0
-        };
-        let green = &parts.iter().find(|part| part[1] == "green");
-        let green = if let Some(green) = green {
-            green[0].parse::<i32>()?
-        } else {
-            0
-        };
-        let blue = &parts.iter().find(|part| part[1] == "blue");
-        let blue = if let Some(blue) = blue {
-            blue[0].parse::<i32>()?
-        } else {
-            0
-        };
-        Ok(Set { red, green, blue })
     }
 }
 
