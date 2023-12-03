@@ -9,3 +9,4 @@ default-run = "part2"
 [dependencies]
 aoclib = { path = "../aoclib" }
 thiserror = { workspace = true }
+nom = { workspace = true }

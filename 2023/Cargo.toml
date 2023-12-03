@@ -5,4 +5,5 @@ members = ["aoclib", "day??", "template"]
 
 [workspace.dependencies]
 thiserror = "1.0.50"
+nom = "7.1.3"
 

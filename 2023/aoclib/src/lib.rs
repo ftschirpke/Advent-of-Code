@@ -29,3 +29,9 @@ impl From<ParseIntError> for AocError {
         AocError::ParseError(format!("(Integer) {}", e))
     }
 }
+
+impl<I: std::fmt::Debug> From<nom::Err<nom::error::Error<I>>> for AocError {
+    fn from(e: nom::Err<nom::error::Error<I>>) -> Self {
+        AocError::ParseError(format!("(Nom) {}", e))
+    }
+}
