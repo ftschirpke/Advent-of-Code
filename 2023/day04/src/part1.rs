@@ -2,14 +2,14 @@ use aoclib::AocError;
 
 use nom::{
     bytes::complete::tag,
-    character::complete::{i32 as i32_parser, u32 as u32_parser},
+    character::complete::i32 as i32_parser,
     multi::{many1_count, separated_list1},
     sequence::{delimited, separated_pair},
     IResult,
 };
 
 pub struct Card {
-    id: u32,
+    pub id: i32,
     winning_numbers: Vec<i32>,
     your_numbers: Vec<i32>,
 }
@@ -29,7 +29,7 @@ fn separator(input: &str) -> IResult<&str, &str> {
 fn card_parser(input: &str) -> IResult<&str, Card> {
     let (input, _) = tag("Card")(input)?;
     let (input, _) = spaces(input)?;
-    let (input, id) = u32_parser(input)?;
+    let (input, id) = i32_parser(input)?;
     let (input, _) = tag(":")(input)?;
     let (input, _) = spaces(input)?;
     let (input, (winning_numbers, your_numbers)) =
@@ -56,12 +56,15 @@ pub fn parse_card(line: &str) -> Result<Card, AocError> {
     }
 }
 
-pub fn card_value(card: &Card) -> i32 {
-    let matches = card
-        .your_numbers
+pub fn number_of_matches(card: &Card) -> i32 {
+    card.your_numbers
         .iter()
         .filter(|n| card.winning_numbers.contains(n))
-        .count() as u32;
+        .count() as i32
+}
+
+pub fn card_value(card: &Card) -> i32 {
+    let matches = number_of_matches(card) as u32;
     if matches == 0 {
         0
     } else {
