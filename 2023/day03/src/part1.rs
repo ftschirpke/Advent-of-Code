@@ -7,9 +7,9 @@ use nom::{
 };
 
 #[derive(Debug, Clone)]
-struct SchematicPart {
-    idx: usize,
-    kind: PartKind,
+pub struct SchematicPart {
+    pub idx: usize,
+    pub kind: PartKind,
 }
 
 impl SchematicPart {
@@ -23,14 +23,14 @@ impl SchematicPart {
 }
 
 #[derive(Debug, Clone)]
-enum PartKind {
+pub enum PartKind {
     Periods { width: usize },
     Symbol { symbol: char },
     Number { width: usize, value: i32 },
 }
 
 impl PartKind {
-    fn width(&self) -> usize {
+    pub fn width(&self) -> usize {
         match self {
             PartKind::Periods { width } => *width,
             PartKind::Symbol { .. } => 1,
@@ -85,7 +85,7 @@ fn parse_row(input: &str) -> IResult<&str, Vec<SchematicPart>> {
     Ok((input, parts))
 }
 
-fn parse_schematic(input: &str) -> Result<Vec<Vec<SchematicPart>>, AocError> {
+pub fn parse_schematic(input: &str) -> Result<Vec<Vec<SchematicPart>>, AocError> {
     let (rest, schematic) = many1(parse_row)(input)?;
     if rest.is_empty() {
         Ok(schematic)
@@ -100,7 +100,7 @@ fn any_adjacent_symbol(focused_part: &SchematicPart, row: &[SchematicPart]) -> b
     })
 }
 
-fn is_adjacent(number_idx: usize, number_width: usize, symbol_idx: usize) -> bool {
+pub fn is_adjacent(number_idx: usize, number_width: usize, symbol_idx: usize) -> bool {
     symbol_idx + 1 >= number_idx && symbol_idx <= number_idx + number_width
 }
 
