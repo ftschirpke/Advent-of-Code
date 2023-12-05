@@ -1,3 +1,4 @@
+pub mod almanac;
 pub mod part1;
 pub mod part2;
 
@@ -20,8 +21,7 @@ mod tests {
     fn test_part2() -> Result<(), AocError> {
         let input = include_str!("../test_input2.txt");
         let output = part2::process(input)?;
-        let expected_output = -1;
-        todo!("expected output part 2");
+        let expected_output = 46;
         assert_eq!(expected_output, output);
         Ok(())
     }
