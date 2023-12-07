@@ -37,13 +37,17 @@ pub enum ScoreType {
     FiveOfAKind,
 }
 
+pub trait Scoreable {
+    fn score(&self) -> ScoreType;
+}
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Hand {
     kinds: [Kind; 5],
 }
 
-impl Hand {
-    pub fn score(&self) -> ScoreType {
+impl Scoreable for Hand {
+    fn score(&self) -> ScoreType {
         let mut counts: HashMap<Kind, u32> = HashMap::new();
         for kind in self.kinds.iter() {
             let entry = counts.entry(*kind).or_insert(0);
@@ -73,10 +77,20 @@ impl Hand {
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct HandInfo {
-    score_type: ScoreType,
-    hand: Hand,
-    bid: u32,
+pub struct HandInfo<H: Scoreable> {
+    pub score_type: ScoreType,
+    hand: H,
+    pub bid: u32,
+}
+
+impl<H: Scoreable> HandInfo<H> {
+    pub fn new(hand: H, bid: u32) -> Self {
+        Self {
+            score_type: hand.score(),
+            hand,
+            bid,
+        }
+    }
 }
 
 fn parse_kind(input: &str) -> IResult<&str, Kind> {
@@ -100,7 +114,7 @@ fn parse_kind(input: &str) -> IResult<&str, Kind> {
     Ok((input, kind))
 }
 
-fn parse_hand_and_bid(input: &str) -> IResult<&str, (Hand, u32)> {
+pub fn parse_hand_and_bid(input: &str) -> IResult<&str, (Hand, u32)> {
     let mut buf = [Kind::Two; 5];
     let (input, ()) = fill(parse_kind, &mut buf)(input)?;
     let hand = Hand { kinds: buf };
@@ -109,7 +123,7 @@ fn parse_hand_and_bid(input: &str) -> IResult<&str, (Hand, u32)> {
     Ok((input, (hand, bid)))
 }
 
-pub fn parse_hand_infos(input: &str) -> Result<Vec<HandInfo>, AocError> {
+pub fn parse_hand_infos(input: &str) -> Result<Vec<HandInfo<Hand>>, AocError> {
     let (input, hands_and_bids) = separated_list1(newline, parse_hand_and_bid)(input)?;
     let (rest, _) = newline(input)?;
     if rest.is_empty() {
