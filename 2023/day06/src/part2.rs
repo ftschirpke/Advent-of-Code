@@ -7,7 +7,7 @@ use nom::{
     sequence::preceded,
 };
 
-use crate::part1::{best_time_held, Record};
+use crate::part1::Record;
 
 fn parse_record(input: &str) -> Result<Record, AocError> {
     let (input, _) = preceded(tag("Time:"), space1)(input)?;
@@ -17,9 +17,7 @@ fn parse_record(input: &str) -> Result<Record, AocError> {
     let (input, distance_parts) = separated_list1(space1, digit1)(input)?;
     let (rest, _) = newline(input)?;
     let time_str = time_parts.into_iter().collect::<String>();
-    dbg!(&time_str);
     let distance_str = distance_parts.into_iter().collect::<String>();
-    dbg!(&distance_str);
     let time = time_str
         .parse::<u64>()
         .map_err(|_| AocError::ParseError(format!("Failed to parse time: {}", time_str)))?;
@@ -43,13 +41,7 @@ fn parse_record(input: &str) -> Result<Record, AocError> {
 
 pub fn process(input: &'static str) -> Result<u64, AocError> {
     let record = parse_record(input)?;
-    let (best_time_held, alternative) = best_time_held(record.time);
-    let number_of_maxima = if alternative.is_some() { 2 } else { 1 };
     let helper = (record.time as f64).powi(2) / 4.0 - record.distance as f64;
-    let helper = helper.sqrt() as u64;
-    if helper <= 1 {
-        return Ok(number_of_maxima);
-    }
-    let number_of_better_solutions = number_of_maxima + helper * 2;
+    let number_of_better_solutions = (helper.sqrt() * 2.0) as u64;
     Ok(number_of_better_solutions)
 }
