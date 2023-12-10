@@ -27,11 +27,28 @@ mod tests {
     }
 
     #[test]
-    fn test_part2() -> Result<(), AocError> {
-        let input = include_str!("../test_input2.txt");
+    fn test_part2a() -> Result<(), AocError> {
+        let input = include_str!("../test_input2a.txt");
         let output = part2::process(input)?;
-        let expected_output = -1;
-        todo!("expected output part 2");
+        let expected_output = 4;
+        assert_eq!(expected_output, output);
+        Ok(())
+    }
+
+    #[test]
+    fn test_part2b() -> Result<(), AocError> {
+        let input = include_str!("../test_input2b.txt");
+        let output = part2::process(input)?;
+        let expected_output = 8;
+        assert_eq!(expected_output, output);
+        Ok(())
+    }
+
+    #[test]
+    fn test_part2c() -> Result<(), AocError> {
+        let input = include_str!("../test_input2c.txt");
+        let output = part2::process(input)?;
+        let expected_output = 10;
         assert_eq!(expected_output, output);
         Ok(())
     }

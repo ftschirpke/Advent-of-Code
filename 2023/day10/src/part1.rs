@@ -1,4 +1,4 @@
-use std::{cmp::min, collections::VecDeque};
+use std::collections::VecDeque;
 
 use aoclib::AocError;
 use nom::{
