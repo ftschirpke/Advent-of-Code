@@ -18,7 +18,7 @@ pub fn parse_sequence(input: &str) -> Result<Vec<i32>, AocError> {
     }
 }
 
-fn differences_in_sequences(sequence: &[i32]) -> Result<Vec<i32>, AocError> {
+pub fn differences_in_sequences(sequence: &[i32]) -> Result<Vec<i32>, AocError> {
     if sequence.len() < 2 {
         Err(AocError::LogicError(format!(
             "Cannot calculate differences of sequence with length {}",
@@ -33,12 +33,12 @@ fn differences_in_sequences(sequence: &[i32]) -> Result<Vec<i32>, AocError> {
     }
 }
 
-pub enum SequenceInfo {
+enum SequenceInfo {
     NextItem(i32),
     LastItem(i32),
 }
 
-pub fn try_predict(sequence: &[i32]) -> Result<SequenceInfo, AocError> {
+fn try_predict_next(sequence: &[i32]) -> Result<SequenceInfo, AocError> {
     let mut iter = sequence.iter();
     let last = iter.next_back().ok_or(AocError::LogicError(
         "Cannot predict next in empty sequence".to_string(),
@@ -59,7 +59,7 @@ pub fn predict_next(sequence: &[i32]) -> Result<i32, AocError> {
     };
     let mut differences = differences_in_sequences(sequence)?;
     loop {
-        match try_predict(&differences)? {
+        match try_predict_next(&differences)? {
             SequenceInfo::NextItem(prediction) => {
                 let prediction_for_original = last_elements_stack
                     .into_iter()

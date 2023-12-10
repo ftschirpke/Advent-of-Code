@@ -18,10 +18,9 @@ mod tests {
 
     #[test]
     fn test_part2() -> Result<(), AocError> {
-        let input = include_str!("../test_input2.txt");
+        let input = include_str!("../test_input1.txt");
         let output = part2::process(input)?;
-        let expected_output = -1;
-        todo!("expected output part 2");
+        let expected_output = 2;
         assert_eq!(expected_output, output);
         Ok(())
     }
