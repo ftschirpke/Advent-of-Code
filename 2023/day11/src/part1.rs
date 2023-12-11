@@ -48,13 +48,16 @@ fn row_parser(input: &str) -> IResult<&str, Vec<(usize, ParseResult)>> {
     Ok((input, row))
 }
 
-pub fn adjust_galaxy_positions(galaxy_positions: Vec<Vec<(usize, usize)>>) -> Vec<Position> {
+pub fn adjust_galaxy_positions(
+    galaxy_positions: Vec<Vec<(usize, usize)>>,
+    galaxy_expansion: usize,
+) -> Vec<Position> {
     let mut row_num = 0;
     let mut occupied_columns = BTreeSet::new();
     let galaxy_positions: Vec<_> = galaxy_positions
         .into_iter()
         .flat_map(|row| {
-            let row_num_increase = if row.is_empty() { 2 } else { 1 };
+            let row_num_increase = if row.is_empty() { galaxy_expansion } else { 1 };
             let positions: Vec<_> = row
                 .into_iter()
                 .map(|(_, col)| {
@@ -76,7 +79,7 @@ pub fn adjust_galaxy_positions(galaxy_positions: Vec<Vec<(usize, usize)>>) -> Ve
                 real_column += 1;
                 Some((col, mapped_column))
             } else {
-                real_column += 2;
+                real_column += galaxy_expansion;
                 None
             }
         })
@@ -121,7 +124,7 @@ pub fn galaxy_distance(galaxy1_pos: &Position, galaxy2_pos: &Position) -> i32 {
 
 pub fn process(input: &'static str) -> Result<i32, AocError> {
     let galaxy_positions = parse_galaxy_positions(input)?;
-    let galaxy_positions = adjust_galaxy_positions(galaxy_positions);
+    let galaxy_positions = adjust_galaxy_positions(galaxy_positions, 2);
     let res = galaxy_positions
         .iter()
         .enumerate()
