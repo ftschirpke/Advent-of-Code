@@ -10,6 +10,11 @@ mod tests {
     #[test]
     fn test_part1() -> Result<(), AocError> {
         let input = include_str!("../test_input1.txt");
+        if input.is_empty() {
+            return Err(AocError::ParseError(
+                "Input file for test 1 is empty".to_string(),
+            ));
+        }
         let output = part1::process(input)?;
         let expected_output = -1;
         todo!("expected output part 1");
@@ -20,6 +25,11 @@ mod tests {
     #[test]
     fn test_part2() -> Result<(), AocError> {
         let input = include_str!("../test_input2.txt");
+        if input.is_empty() {
+            return Err(AocError::ParseError(
+                "Input file for test 2 is empty".to_string(),
+            ));
+        }
         let output = part2::process(input)?;
         let expected_output = -1;
         todo!("expected output part 2");
