@@ -10,3 +10,4 @@ default-run = "part2"
 aoclib = { path = "../aoclib" }
 thiserror = { workspace = true }
 nom = { workspace = true }
+bitvec = "1.0.1"
