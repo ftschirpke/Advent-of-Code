@@ -165,15 +165,9 @@ pub fn parse_grid(input: &str) -> Result<Grid, AocError> {
     }
 }
 
-pub fn amount_of_energized_tiles(grid: &Grid) -> usize {
+pub fn amount_of_energized_tiles(grid: &Grid, start: (Position, Direction)) -> usize {
     let mut visited = vec![vec![false; grid.col_num]; grid.row_num];
-    let mut to_visit = VecDeque::from([(
-        Position {
-            row_idx: 0,
-            col_idx: 0,
-        },
-        Direction::Right,
-    )]);
+    let mut to_visit = VecDeque::from([start]);
     let mut redirections_visited: Vec<(Position, Direction)> = Vec::new();
     while !to_visit.is_empty() {
         let (position, direction) = to_visit.pop_front().unwrap();
@@ -208,5 +202,12 @@ pub fn amount_of_energized_tiles(grid: &Grid) -> usize {
 
 pub fn process(input: &'static str) -> Result<usize, AocError> {
     let grid = parse_grid(input)?;
-    Ok(amount_of_energized_tiles(&grid))
+    let start = (
+        Position {
+            row_idx: 0,
+            col_idx: 0,
+        },
+        Direction::Right,
+    );
+    Ok(amount_of_energized_tiles(&grid, start))
 }
