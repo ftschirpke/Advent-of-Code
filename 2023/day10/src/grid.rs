@@ -215,10 +215,10 @@ impl Grid {
         Some(self.grid[location.row][location.col])
     }
 
-    pub fn get_above(&self, location: Location) -> Option<Pipe> {
-        if location.row == 0 {
+    pub fn get_by_idx(&self, row: usize, col: usize) -> Option<Pipe> {
+        if row >= self.rows || col >= self.cols {
             return None;
         }
-        Some(self.grid[location.row - 1][location.col])
+        Some(self.grid[row][col])
     }
 }
