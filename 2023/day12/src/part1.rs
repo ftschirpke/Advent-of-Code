@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 use aoclib::AocError;
 use nom::{
@@ -19,8 +19,8 @@ pub enum SpringStatus {
 
 #[derive(Debug, Clone)]
 pub struct DamagedRow {
-    row: Vec<SpringStatus>,
-    contiguous_groups: Vec<u32>,
+    pub row: Vec<SpringStatus>,
+    pub contiguous_groups: Vec<u32>,
 }
 
 impl DamagedRow {
@@ -31,189 +31,126 @@ impl DamagedRow {
         }
     }
 
-    pub fn calculate_solutions(&self) -> Vec<RowSolution> {
-        let mut incomplete_solutions: VecDeque<RowSolution> = VecDeque::new();
-        let mut complete_solutions: Vec<RowSolution> = Vec::new();
-        incomplete_solutions.push_back(self.into());
-        while let Some(mut solution) = incomplete_solutions.pop_back() {
-            if solution.is_complete() {
-                complete_solutions.push(solution);
+    /// Checks whether given the data we have about the contiguous groups of springs
+    /// it is possible to have the next group start at the current row index
+    fn group_is_possible_from_index(&self, row_idx: usize, cg_idx: usize) -> bool {
+        let current_group = self.contiguous_groups[cg_idx] as usize;
+        let left_in_row = self.row.len() - row_idx;
+        if current_group > left_in_row {
+            return false;
+        }
+        let operational_in_supposed_group =
+            self.row[row_idx..(row_idx + current_group)].contains(&SpringStatus::Operational);
+        if operational_in_supposed_group {
+            return false;
+        }
+        current_group == left_in_row // group fits perfectly 
+            || self.row[row_idx + current_group] != SpringStatus::Damaged // group ends as intended
+    }
+
+    /// Checks whether the current indices are at then end of their corresponding vectors and
+    /// additionally returns a count if this is the case
+    /// this count is one if solutions ending up with these indices should be counted as a solution
+    /// and zero if that is not the case and the solution should be discarded as invalid
+    fn is_at_end_with_count(&self, row_idx: usize, cg_idx: usize) -> Option<usize> {
+        let at_row_end = row_idx >= self.row.len();
+        let at_cg_end = cg_idx >= self.contiguous_groups.len();
+        if at_row_end && at_cg_end {
+            Some(1)
+        } else if at_row_end {
+            Some(0)
+        } else if at_cg_end {
+            if self.row[row_idx..].contains(&SpringStatus::Damaged) {
+                Some(0)
             } else {
-                if let Some(operational_option) = solution.with_next_damaged() {
-                    if operational_option.is_valid() {
-                        incomplete_solutions.push_back(operational_option);
-                    }
-                }
-                if solution.set_next_operational() && solution.is_valid() {
-                    incomplete_solutions.push_back(solution);
+                Some(1)
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Returns which indices need to be checked next if the current spring is damaged
+    fn next_to_check_if_damaged(&self, row_idx: usize, cg_idx: usize) -> Option<(usize, usize)> {
+        match self.row[row_idx] {
+            SpringStatus::Damaged | SpringStatus::Unknown => {
+                // when the spring is or might be damaged, we need to check if that is possible
+                // from the data we have about the contiguous groups of damaged springs
+                if self.group_is_possible_from_index(row_idx, cg_idx) {
+                    let current_group = self.contiguous_groups[cg_idx] as usize;
+                    let next_row_idx = row_idx + current_group + 1;
+                    Some((next_row_idx, cg_idx + 1))
+                } else {
+                    None
                 }
             }
-        }
-        complete_solutions
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct RowSolution<'a> {
-    original: &'a DamagedRow,
-    solution: Vec<SpringStatus>,
-}
-
-impl<'a> From<&'a DamagedRow> for RowSolution<'a> {
-    fn from(row: &'a DamagedRow) -> Self {
-        let mut solution = Self {
-            original: row,
-            solution: row.row.clone(),
-        };
-        solution.set_implied_values();
-        solution
-    }
-}
-
-impl<'a> RowSolution<'a> {
-    pub fn set_next_operational(&mut self) -> bool {
-        let next_unknown = self
-            .solution
-            .iter_mut()
-            .find(|status| **status == SpringStatus::Unknown);
-        if let Some(next_unknown) = next_unknown {
-            *next_unknown = SpringStatus::Operational;
-            self.set_implied_values();
-            true
-        } else {
-            false
+            // spring cannot be damaged when we know that it is operational
+            SpringStatus::Operational => None,
         }
     }
 
-    pub fn with_next_operational(&self) -> Option<Self> {
-        let mut solution = self.clone();
-        let changed = solution.set_next_operational();
-        if changed {
-            Some(solution)
-        } else {
-            None
+    /// Returns which indices need to be checked next if the current index is operational
+    fn next_to_check_if_operational(
+        &self,
+        row_idx: usize,
+        cg_idx: usize,
+    ) -> Option<(usize, usize)> {
+        match self.row[row_idx] {
+            // spring cannot be operational when we know that it is damaged
+            SpringStatus::Damaged => None,
+            SpringStatus::Operational | SpringStatus::Unknown => {
+                // when the spring is or might be operational, we need to continue checking for
+                // solutions at the next spring
+                Some((row_idx + 1, cg_idx))
+            }
         }
     }
 
-    pub fn set_next_damaged(&mut self) -> bool {
-        let next_unknown = self
-            .solution
-            .iter_mut()
-            .find(|status| **status == SpringStatus::Unknown);
-        if let Some(next_unknown) = next_unknown {
-            *next_unknown = SpringStatus::Damaged;
-            self.set_implied_values();
-            true
-        } else {
-            false
-        }
-    }
-
-    pub fn with_next_damaged(&self) -> Option<Self> {
-        let mut solution = self.clone();
-        let changed = solution.set_next_damaged();
-        if changed {
-            Some(solution)
-        } else {
-            None
-        }
-    }
-
-    fn set_implied_values(&mut self) {
-        let mut index = 0;
-        let mut next_group = 0;
-        while index < self.solution.len() {
-            match self.solution[index] {
-                SpringStatus::Operational => index += 1,
-                SpringStatus::Damaged => {
-                    let group_size = self.original.contiguous_groups[next_group];
-                    let group_end = (index + group_size as usize).min(self.solution.len());
-                    for i in index + 1..group_end {
-                        self.solution[i] = SpringStatus::Damaged;
-                    }
-                    index = group_end;
-                    next_group += 1;
-                    if next_group >= self.original.contiguous_groups.len() {
-                        for i in index..self.solution.len() {
-                            self.solution[i] = SpringStatus::Operational;
+    pub fn count_solutions(&self) -> usize {
+        let mut counts_for_checked_approaches: HashMap<(usize, usize), usize> = HashMap::new();
+        let mut approaches_to_check: VecDeque<(usize, usize)> = VecDeque::new();
+        approaches_to_check.push_back((0, 0));
+        while !approaches_to_check.is_empty() {
+            let approach = approaches_to_check.back().unwrap();
+            if counts_for_checked_approaches.contains_key(approach) {
+                approaches_to_check.pop_back();
+            } else {
+                let (row_idx, cg_idx) = *approach;
+                if let Some(count) = self.is_at_end_with_count(row_idx, cg_idx) {
+                    counts_for_checked_approaches.insert((row_idx, cg_idx), count);
+                    approaches_to_check.pop_back();
+                } else {
+                    let count_if_operational = if let Some(approach) =
+                        self.next_to_check_if_operational(row_idx, cg_idx)
+                    {
+                        if let Some(&count) = counts_for_checked_approaches.get(&approach) {
+                            Some(count)
+                        } else {
+                            approaches_to_check.push_back(approach);
+                            None
                         }
-                        index = self.solution.len();
-                    } else if group_end < self.solution.len() {
-                        self.solution[group_end] = SpringStatus::Operational;
-                        index += 1;
-                    }
-                }
-                SpringStatus::Unknown => break,
-            }
-        }
-    }
-
-    fn is_valid(&self) -> bool {
-        let mut damaged_count = 0;
-        let mut next_group = 0;
-        let mut in_group: bool = false;
-        for (original, solution) in self.original.row.iter().zip(self.solution.iter()) {
-            match solution {
-                SpringStatus::Damaged => {
-                    if *original == SpringStatus::Operational {
-                        return false;
-                    }
-                    if next_group >= self.original.contiguous_groups.len() {
-                        return false;
-                    }
-                    damaged_count += 1;
-                    in_group = true;
-                }
-                SpringStatus::Operational => {
-                    if *original == SpringStatus::Damaged {
-                        return false;
-                    }
-                    if in_group {
-                        next_group += 1;
-                        in_group = false;
-                    }
-                }
-                SpringStatus::Unknown => {
-                    if *original != SpringStatus::Unknown {
-                        return false;
+                    } else {
+                        Some(0)
+                    };
+                    let count_if_damaged =
+                        if let Some(approach) = self.next_to_check_if_damaged(row_idx, cg_idx) {
+                            if let Some(&count) = counts_for_checked_approaches.get(&approach) {
+                                Some(count)
+                            } else {
+                                approaches_to_check.push_back(approach);
+                                None
+                            }
+                        } else {
+                            Some(0)
+                        };
+                    if let (Some(a), Some(b)) = (count_if_operational, count_if_damaged) {
+                        counts_for_checked_approaches.insert((row_idx, cg_idx), a + b);
+                        approaches_to_check.pop_back();
                     }
                 }
             }
         }
-        damaged_count
-            <= self
-                .original
-                .contiguous_groups
-                .iter()
-                .fold(0, |acc, group| acc + *group)
-    }
-
-    fn is_complete(&self) -> bool {
-        let no_unknowns_left = !self
-            .solution
-            .iter()
-            .any(|status| *status == SpringStatus::Unknown);
-        let mut groups = vec![0; self.original.contiguous_groups.len()];
-        let mut in_group = false;
-        let mut next_group = 0;
-        for status in self.solution.iter() {
-            match status {
-                SpringStatus::Damaged => {
-                    if !in_group {
-                        in_group = true;
-                    }
-                    groups[next_group] += 1;
-                }
-                SpringStatus::Operational => {
-                    if in_group {
-                        in_group = false;
-                        next_group += 1;
-                    }
-                }
-                SpringStatus::Unknown => {}
-            }
-        }
-        no_unknowns_left && groups == self.original.contiguous_groups
+        *counts_for_checked_approaches.get(&(0, 0)).unwrap()
     }
 }
 
@@ -249,8 +186,8 @@ pub fn parse_row(input: &str) -> Result<DamagedRow, AocError> {
 
 pub fn solve_row(input: &str) -> Result<u32, AocError> {
     let original_row = parse_row(input)?;
-    let solutions = original_row.calculate_solutions();
-    Ok(solutions.len() as u32)
+    let solutions = original_row.count_solutions();
+    Ok(solutions as u32)
 }
 
 pub fn process(input: &'static str) -> Result<u32, AocError> {
