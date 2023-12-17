@@ -23,30 +23,11 @@ impl From<&U8Digit> for char {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Status {
     pub pos: Position,
     pub direction: Direction,
     pub steps_in_direction_taken: u8,
-}
-
-impl PartialOrd for Status {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for Status {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let self_abs = self.pos.row + self.pos.col;
-        let other_abs = other.pos.row + other.pos.col;
-        if self_abs == other_abs {
-            self.steps_in_direction_taken
-                .cmp(&other.steps_in_direction_taken)
-        } else {
-            self_abs.cmp(&other_abs)
-        }
-    }
 }
 
 pub fn process(input: &'static str) -> Result<u32, AocError> {
