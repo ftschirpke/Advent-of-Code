@@ -1,3 +1,4 @@
+use crate::position::Position;
 use crate::AocError;
 
 use nom::{character::complete::line_ending, multi::many1, sequence::terminated, IResult};
@@ -51,6 +52,46 @@ where
                 rest
             )))
         }
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> Option<&T> {
+        if row >= self.rows || col >= self.cols {
+            None
+        } else {
+            Some(&self.elements[row * self.cols + col])
+        }
+    }
+
+    pub fn get_unchecked(&self, row: usize, col: usize) -> &T {
+        &self.elements[row * self.cols + col]
+    }
+
+    pub fn get_mut(&mut self, row: usize, col: usize) -> Option<&mut T> {
+        if row >= self.rows || col >= self.cols {
+            None
+        } else {
+            Some(&mut self.elements[row * self.cols + col])
+        }
+    }
+
+    pub fn get_mut_unchecked(&mut self, row: usize, col: usize) -> &mut T {
+        &mut self.elements[row * self.cols + col]
+    }
+
+    pub fn get_pos(&self, pos: &Position) -> Option<&T> {
+        self.get(pos.row, pos.col)
+    }
+
+    pub fn get_pos_unchecked(&self, pos: &Position) -> &T {
+        self.get_unchecked(pos.row, pos.col)
+    }
+
+    pub fn get_pos_mut(&mut self, pos: &Position) -> Option<&mut T> {
+        self.get_mut(pos.row, pos.col)
+    }
+
+    pub fn get_pos_mut_unchecked(&mut self, pos: &Position) -> &mut T {
+        self.get_mut_unchecked(pos.row, pos.col)
     }
 
     pub fn column(&self, col: usize) -> impl DoubleEndedIterator<Item = &T> {

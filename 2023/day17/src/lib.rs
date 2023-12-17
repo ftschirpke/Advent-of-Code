@@ -16,8 +16,7 @@ mod tests {
             ));
         }
         let output = part1::process(input)?;
-        let expected_output = -1;
-        todo!("expected output part 1");
+        let expected_output = 102;
         assert_eq!(expected_output, output);
         Ok(())
     }

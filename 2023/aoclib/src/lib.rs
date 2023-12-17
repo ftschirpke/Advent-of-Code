@@ -4,7 +4,9 @@ use std::string::ParseError;
 
 use thiserror::Error;
 
+pub mod direction;
 pub mod grid;
+pub mod position;
 
 #[derive(Debug, Error)]
 pub enum AocError {
