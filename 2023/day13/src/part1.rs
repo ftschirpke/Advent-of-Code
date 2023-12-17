@@ -73,16 +73,15 @@ pub enum MirrorAxis {
 pub fn find_mirror_index(bitvecs: &[BitVec]) -> Option<usize> {
     let len = bitvecs.len();
     (0..len - 1).find(|idx| {
-        let mut before_idx = *idx;
-        let mut after_idx = *idx + 1;
-        while bitvecs[before_idx] == bitvecs[after_idx] {
-            if before_idx == 0 || after_idx == len - 1 {
-                return true;
+        let before_indices = (0..=*idx).rev();
+        let after_indices = (*idx + 1)..len;
+        for (before_idx, after_idx) in before_indices.zip(after_indices) {
+            println!("before_idx: {}, after_idx: {}", before_idx, after_idx);
+            if bitvecs[before_idx] != bitvecs[after_idx] {
+                return false;
             }
-            before_idx -= 1;
-            after_idx += 1;
         }
-        false
+        true
     })
 }
 
