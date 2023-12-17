@@ -15,9 +15,19 @@ pub enum Rock {
     Stationary,
 }
 
-#[derive(Debug)]
+impl Rock {
+    pub fn to_char(&self) -> char {
+        match *self {
+            Rock::Empty => '.',
+            Rock::Rolling => 'O',
+            Rock::Stationary => '#',
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Grid {
-    pub rock_columns: Vec<Vec<Rock>>,
+    rocks: Vec<Rock>,
     pub cols: usize,
     pub rows: usize,
 }
@@ -26,28 +36,43 @@ impl Grid {
     pub fn new(rock_rows: Vec<Vec<Rock>>) -> Result<Self, AocError> {
         let rows = rock_rows.len();
         let cols = rock_rows[0].len();
-        let mut rock_columns = vec![vec![Rock::Empty; rows]; cols];
-        rock_rows
-            .into_iter()
-            .enumerate()
-            .try_for_each(|(row_idx, row)| {
-                if row.len() != cols {
-                    return Err(AocError::ParseError(
-                        "All rows must have the same length".to_string(),
-                    ));
-                }
-                row.into_iter()
-                    .enumerate()
-                    .filter(|(_, rock)| *rock != Rock::Empty)
-                    .for_each(|(col_idx, rock)| rock_columns[col_idx][row_idx] = rock);
-                Ok::<(), AocError>(())
-            })?;
-        let grid = Grid {
-            rock_columns,
-            cols,
-            rows,
-        };
+        rock_rows.iter().try_for_each(|row| {
+            if row.len() != cols {
+                return Err(AocError::ParseError(
+                    "All rows must have the same length".to_string(),
+                ));
+            }
+            Ok::<(), AocError>(())
+        })?;
+        let rocks = rock_rows.into_iter().flatten().collect();
+        let grid = Grid { rocks, cols, rows };
         Ok(grid)
+    }
+
+    pub fn column(&self, col: usize) -> impl DoubleEndedIterator<Item = &Rock> {
+        self.rocks.iter().skip(col).step_by(self.cols)
+    }
+
+    pub fn row(&self, row: usize) -> impl DoubleEndedIterator<Item = &Rock> {
+        self.rocks.iter().skip(row * self.cols).take(self.cols)
+    }
+
+    pub fn column_mut(&mut self, col: usize) -> impl DoubleEndedIterator<Item = &mut Rock> {
+        self.rocks.iter_mut().skip(col).step_by(self.cols)
+    }
+
+    pub fn row_mut(&mut self, row: usize) -> impl DoubleEndedIterator<Item = &mut Rock> {
+        self.rocks.iter_mut().skip(row * self.cols).take(self.cols)
+    }
+
+    pub fn print(&self) {
+        self.rocks.chunks(self.cols).for_each(|row| {
+            println!(
+                "{}",
+                row.iter().map(|rock| rock.to_char()).collect::<String>()
+            )
+        });
+        println!();
     }
 }
 
@@ -77,24 +102,27 @@ pub fn parse_grid(input: &str) -> Result<Grid, AocError> {
 
 pub fn process(input: &'static str) -> Result<i32, AocError> {
     let grid = parse_grid(input)?;
-    let pressure_sum = grid.rock_columns.into_iter().fold(0i32, |grid_acc, rocks| {
-        let mut next_pressure_value = grid.rows as i32;
-        let column_pressure = rocks
-            .into_iter()
-            .enumerate()
-            .fold(0i32, |col_acc, (i, rock)| match rock {
-                Rock::Empty => col_acc,
-                Rock::Stationary => {
-                    next_pressure_value = (grid.rows - i - 1) as i32;
-                    col_acc
-                }
-                Rock::Rolling => {
-                    let val = next_pressure_value;
-                    next_pressure_value -= 1;
-                    col_acc + val
-                }
-            });
-        grid_acc + column_pressure
-    });
-    Ok(pressure_sum)
+    let total_pressure = (0..grid.cols)
+        .map(|col_num| {
+            let mut next_pressure_value = grid.rows as i32;
+            let column_pressure: i32 = grid
+                .column(col_num)
+                .enumerate()
+                .filter_map(|(i, rock)| match rock {
+                    Rock::Empty => None,
+                    Rock::Stationary => {
+                        next_pressure_value = (grid.rows - i - 1) as i32;
+                        None
+                    }
+                    Rock::Rolling => {
+                        let val = next_pressure_value;
+                        next_pressure_value -= 1;
+                        Some(val)
+                    }
+                })
+                .sum();
+            column_pressure
+        })
+        .sum();
+    Ok(total_pressure)
 }
