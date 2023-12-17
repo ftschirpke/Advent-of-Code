@@ -4,6 +4,8 @@ use std::string::ParseError;
 
 use thiserror::Error;
 
+pub mod grid;
+
 #[derive(Debug, Error)]
 pub enum AocError {
     #[error("Parse Error: {0}")]
