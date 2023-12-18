@@ -1,7 +1,7 @@
 use std::num::ParseIntError;
 
+use aoclib::direction::Direction;
 use aoclib::AocError;
-use aoclib::{direction::Direction, position::Position};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while_m_n},
@@ -14,27 +14,27 @@ use nom::{
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DigInstruction {
-    direction: Direction,
-    count: u8,
-    color: Color,
+    pub direction: Direction,
+    pub count: u32,
+    pub color: Color,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Color {
-    red: u8,
-    green: u8,
-    blue: u8,
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
 }
 
 fn from_hex(input: &str) -> Result<u8, ParseIntError> {
     u8::from_str_radix(input, 16)
 }
 
-fn is_hex_digit(c: char) -> bool {
+pub fn is_hex_digit(c: char) -> bool {
     c.is_ascii_hexdigit()
 }
 
-fn direction_parser(input: &str) -> IResult<&str, Direction> {
+pub fn direction_parser(input: &str) -> IResult<&str, Direction> {
     alt((
         value(Direction::Right, char_parser('R')),
         value(Direction::Left, char_parser('L')),
@@ -62,13 +62,13 @@ fn parse_instruction(input: &str) -> IResult<&str, DigInstruction> {
     let (input, color) = delimited(space1, color_parser, line_ending)(input)?;
     let instruction = DigInstruction {
         direction,
-        count,
+        count: count as u32,
         color,
     };
     Ok((input, instruction))
 }
 
-pub fn parse_instructions(input: &'static str) -> Result<Vec<DigInstruction>, AocError> {
+fn parse_instructions(input: &'static str) -> Result<Vec<DigInstruction>, AocError> {
     let (rest, instructions) = many1(parse_instruction)(input)?;
     if rest.is_empty() {
         Ok(instructions)
@@ -124,6 +124,5 @@ pub fn area(dig_instructions: &[DigInstruction]) -> Result<i64, AocError> {
 
 pub fn process(input: &'static str) -> Result<i64, AocError> {
     let dig_instructions = parse_instructions(input)?;
-    let area = area(&dig_instructions)?;
-    Ok(area)
+    area(&dig_instructions)
 }
