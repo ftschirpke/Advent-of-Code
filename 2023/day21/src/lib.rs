@@ -5,6 +5,7 @@ pub mod part2;
 mod tests {
     use crate::part1;
     use crate::part2;
+    use aoclib::grid::Grid;
     use aoclib::AocError;
 
     #[test]
@@ -15,9 +16,9 @@ mod tests {
                 "Input file for test 1 is empty".to_string(),
             ));
         }
-        let output = part1::process(input)?;
-        let expected_output = -1;
-        todo!("expected output part 1");
+        let grid = Grid::parse_from(input, part1::parse_tile)?;
+        let output = part1::count_garden_plots_for_fixed_step_amount(&grid, 6)?;
+        let expected_output = 16;
         assert_eq!(expected_output, output);
         Ok(())
     }
