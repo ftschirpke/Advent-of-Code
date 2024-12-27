@@ -56,7 +56,7 @@ pub fn build(b: *std.Build) void {
         .root_module = part1_mod,
     });
     const part2_unit_tests = b.addTest(.{
-        .root_module = part1_mod,
+        .root_module = part2_mod,
     });
 
     const run_part1_unit_tests = b.addRunArtifact(part1_unit_tests);

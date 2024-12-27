@@ -11,6 +11,9 @@ pub fn main() !void {
     };
     defer file.close();
 
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+
     var buffer: [10]u8 = undefined;
     const buffer_slice = buffer[0..];
     const bytes_read = try file.read(buffer_slice);
