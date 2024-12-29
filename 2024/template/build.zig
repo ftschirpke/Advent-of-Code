@@ -36,17 +36,21 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(part1);
     b.installArtifact(part2);
 
+    const install_part1 = b.addInstallArtifact(part1, .{});
+    const install_part2 = b.addInstallArtifact(part2, .{});
+
     const part1_cmd = b.addRunArtifact(part1);
     const part2_cmd = b.addRunArtifact(part2);
 
-    part1_cmd.step.dependOn(b.getInstallStep());
-    part2_cmd.step.dependOn(b.getInstallStep());
+    part1_cmd.step.dependOn(&install_part1.step);
+    part2_cmd.step.dependOn(&install_part2.step);
 
     if (b.args) |args| {
         part1_cmd.addArgs(args);
         part2_cmd.addArgs(args);
     }
 
+    // TODO: properly separate part1 and part2 to have their own commands
     const part1_step = b.step("part1", "Run the part1 app");
     const part2_step = b.step("part2", "Run the part2 app");
     part1_step.dependOn(&part1_cmd.step);

@@ -5,7 +5,7 @@ pub fn main() !void {
     const cwd = std.fs.cwd();
     const file = cwd.openFile("input.txt", .{}) catch |err| {
         if (err == std.fs.File.OpenError.FileNotFound) {
-            std.log.debug("There should exist a 'input.txt' file in the current working directory.", .{});
+            std.log.debug("[PART 1] There should exist a 'input.txt' file in the current working directory.", .{});
         }
         return err;
     };

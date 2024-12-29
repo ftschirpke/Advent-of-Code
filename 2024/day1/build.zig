@@ -36,11 +36,14 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(part1);
     b.installArtifact(part2);
 
+    const install_part1 = b.addInstallArtifact(part1, .{});
+    const install_part2 = b.addInstallArtifact(part2, .{});
+
     const part1_cmd = b.addRunArtifact(part1);
     const part2_cmd = b.addRunArtifact(part2);
 
-    part1_cmd.step.dependOn(b.getInstallStep());
-    part2_cmd.step.dependOn(b.getInstallStep());
+    part1_cmd.step.dependOn(&install_part1.step);
+    part2_cmd.step.dependOn(&install_part2.step);
 
     if (b.args) |args| {
         part1_cmd.addArgs(args);
