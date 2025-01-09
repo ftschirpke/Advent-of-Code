@@ -1,0 +1,3 @@
+[submodule "2024/lib/mecha"]
+	path = 2024/lib/mecha
+	url = git@github.com:hejsil/mecha.git

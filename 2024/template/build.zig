@@ -5,7 +5,13 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const lib_mod = b.createModule(.{
-        .root_source_file = b.path("../lib/src/root.zig"),
+        .root_source_file = b.path("../lib/aoc/src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const mecha_mod = b.createModule(.{
+        .root_source_file = b.path("../lib/mecha/mecha.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -23,6 +29,8 @@ pub fn build(b: *std.Build) void {
 
     part1_mod.addImport("aoc_lib", lib_mod);
     part2_mod.addImport("aoc_lib", lib_mod);
+    part1_mod.addImport("mecha", mecha_mod);
+    part2_mod.addImport("mecha", mecha_mod);
 
     const part1 = b.addExecutable(.{
         .name = "template",
@@ -50,7 +58,6 @@ pub fn build(b: *std.Build) void {
         part2_cmd.addArgs(args);
     }
 
-    // TODO: properly separate part1 and part2 to have their own commands
     const part1_step = b.step("part1", "Run the part1 app");
     const part2_step = b.step("part2", "Run the part2 app");
     part1_step.dependOn(&part1_cmd.step);

@@ -13,12 +13,23 @@ pub fn main() !void {
 
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
+    const allocator = arena.allocator();
 
-    var buffer: [10]u8 = undefined;
-    const buffer_slice = buffer[0..];
-    const bytes_read = try file.read(buffer_slice);
-    std.log.debug("{}", .{bytes_read});
-    // TODO: implement parsing
+    var buf_reader = std.io.bufferedReader(file.reader());
+    var reader = buf_reader.reader();
+
+    var line = std.ArrayList(u8).init(allocator);
+    defer line.deinit();
+
+    const writer = line.writer();
+    var line_no: usize = 0;
+    while (reader.streamUntilDelimiter(writer, '\n', null)) : (line_no += 1) {
+        defer line.clearRetainingCapacity();
+        // TODO: implement parsing
+    } else |err| switch (err) {
+        error.EndOfStream => {},
+        else => return err,
+    }
 
     try run();
 }
