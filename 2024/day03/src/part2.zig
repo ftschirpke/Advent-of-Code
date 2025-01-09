@@ -88,6 +88,22 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     const instructions = try parse(file, allocator);
+    defer instructions.deinit();
 
     try part1.run(&instructions);
+}
+
+test "parsing memory leaks" {
+    const testing = std.testing;
+    const cwd = std.fs.cwd();
+    const file = cwd.openFile("input.txt", .{}) catch |err| {
+        if (err == std.fs.File.OpenError.FileNotFound) {
+            std.log.debug("[TEST] There should exist a 'input.txt' file in the current working directory.", .{});
+        }
+        return err;
+    };
+    defer file.close();
+
+    const instructions = try parse(file, testing.allocator);
+    defer instructions.deinit();
 }

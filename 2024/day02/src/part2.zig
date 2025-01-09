@@ -47,6 +47,7 @@ pub fn main() !void {
             .ok => |parsed_line| parsed_line,
             .err => |err| return err,
         };
+        defer allocator.free(parsed_line_res.value.ok);
 
         if (validate_report(parsed_line)) {
             safe_reports += 1;
@@ -119,4 +120,15 @@ fn run(count: u32) !void {
     try stdout.print("Total number of safe reports: {}\n", .{count});
 
     try bw.flush();
+}
+
+test "parsing memory leaks" {
+    const allocator = std.testing.allocator;
+
+    const parsed_line_res = (try line_parser.parse(allocator, " 12 13 14 15"));
+    _ = switch (parsed_line_res.value) {
+        .ok => |parsed_line| parsed_line,
+        .err => |err| return err,
+    };
+    defer allocator.free(parsed_line_res.value.ok);
 }

@@ -70,6 +70,7 @@ pub fn main() !void {
     const allocator = arena.allocator();
 
     const instructions = try parse(file, allocator);
+    defer instructions.deinit();
 
     try run(&instructions);
 }
@@ -89,4 +90,19 @@ pub fn run(instructions: *const std.ArrayList(Multiply)) !void {
     try stdout.print("The mul instructions sum up to {d}\n", .{sum});
 
     try bw.flush();
+}
+
+test "parsing memory leaks" {
+    const testing = std.testing;
+    const cwd = std.fs.cwd();
+    const file = cwd.openFile("input.txt", .{}) catch |err| {
+        if (err == std.fs.File.OpenError.FileNotFound) {
+            std.log.debug("[TEST] There should exist a 'input.txt' file in the current working directory.", .{});
+        }
+        return err;
+    };
+    defer file.close();
+
+    const instructions = try parse(file, testing.allocator);
+    defer instructions.deinit();
 }
